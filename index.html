@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的摄影作品集</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 纯展示 + 瀑布流（Masonry）布局，按图片原始高度自动分列 */
+        .masonry {
+            column-count: 1;
+            column-gap: 1rem; /* 间距 */
+        }
+        @media (min-width: 640px) { /* sm */
+            .masonry { column-count: 2; }
+        }
+        @media (min-width: 1024px) { /* lg */
+            .masonry { column-count: 3; }
+        }
+        .masonry-item {
+            break-inside: avoid; /* 防止图片在列间断开 */
+            margin-bottom: 1rem;
+        }
+
+        /* 平衡布局（JS 分列）：更均匀的高度分配 */
+        .masonry-balanced {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        .masonry-col {
+            flex: 1 1 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <!-- 1. 网页标题 -->
+    <header class="py-12 bg-white shadow-sm">
+        <h1 class="text-4xl font-bold text-center text-gray-800">
+            我的摄影作品集
+        </h1>
+    </header>
+
+    <!-- 2. 分类筛选已移除，全部分类下文直接展示 -->
+
+    <!-- 3. 图片陈列网格 -->
+    <main class="max-w-7xl mx-auto px-4 pb-12">
+        <section class="category-section mb-8" data-category="architecture">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">建筑</h2>
+            <div class="masonry-balanced">
+                <div class="gallery-item masonry-item" data-category="architecture"><img src="Images/建筑/Object_1.jpg" alt="建筑 Object_1" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="architecture"><img src="Images/建筑/Object_2.jpg" alt="建筑 Object_2" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="architecture"><img src="Images/建筑/Object_3.jpg" alt="建筑 Object_3" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="architecture"><img src="Images/建筑/Object_4.jpg" alt="建筑 Object_4" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="architecture"><img src="Images/建筑/Object_5.jpg" alt="建筑 Object_5" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="architecture"><img src="Images/建筑/Object_6.jpg" alt="建筑 Object_6" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="architecture"><img src="Images/建筑/Object_7.jpg" alt="建筑 Object_7" class="block w-full h-auto rounded-lg shadow-md"></div>
+            </div>
+        </section>
+
+        <section class="category-section mb-8" data-category="nature">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">自然</h2>
+            <div class="masonry-balanced">
+                <div class="gallery-item masonry-item" data-category="nature"><img src="Images/自然/Nature_1.jpg" alt="自然 Nature_1" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="nature"><img src="Images/自然/Nature_2.jpg" alt="自然 Nature_2" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="nature"><img src="Images/自然/Nature_3.jpg" alt="自然 Nature_3" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="nature"><img src="Images/自然/Nature_4.png" alt="自然 Nature_4" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="nature"><img src="Images/自然/Nature_5.jpg" alt="自然 Nature_5" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="nature"><img src="Images/自然/Nature_6.jpg" alt="自然 Nature_6" class="block w-full h-auto rounded-lg shadow-md"></div>
+            </div>
+        </section>
+
+        <section class="category-section mb-8" data-category="portrait">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">人像</h2>
+            <div class="masonry-balanced">
+                <div class="gallery-item masonry-item" data-category="portrait"><img src="Images/人像/People_1.jpg" alt="人像 People_1" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="portrait"><img src="Images/人像/People_2.jpg" alt="人像 People_2" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="portrait"><img src="Images/人像/People_3.png" alt="人像 People_3" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="portrait"><img src="Images/人像/People_4.jpg" alt="人像 People_4" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="portrait"><img src="Images/人像/People_5.jpg" alt="人像 People_5" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="portrait"><img src="Images/人像/People_6.jpg" alt="人像 People_6" class="block w-full h-auto rounded-lg shadow-md"></div>
+            </div>
+        </section>
+
+        <section class="category-section mb-8" data-category="other">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">其他</h2>
+            <div class="masonry-balanced">
+                <div class="gallery-item masonry-item" data-category="other"><img src="Images/其他/Other_1.jpg" alt="其他 Other_1" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="other"><img src="Images/其他/Other_2.jpg" alt="其他 Other_2" class="block w-full h-auto rounded-lg shadow-md"></div>
+                <div class="gallery-item masonry-item" data-category="other"><img src="Images/其他/Other_3.jpg" alt="其他 Other_3" class="block w-full h-auto rounded-lg shadow-md"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 弹窗与交互脚本已移除，页面为纯展示 -->
+
+
+    <script>
+        // 仅用于布局的少量脚本：按图片真实高度，均匀分配到列
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.category-section');
+
+            function getColumnCount() {
+                const w = window.innerWidth;
+                if (w >= 1024) return 3; // lg
+                if (w >= 640) return 2;  // sm
+                return 1;
+            }
+
+            async function reflow(container) {
+                if (!container) return;
+                // 收集所有图片项（无论是否已在列中）
+                const items = Array.from(container.querySelectorAll('.gallery-item'));
+                // 清空容器并创建列
+                container.innerHTML = '';
+                const colsCount = getColumnCount();
+                const cols = [];
+                for (let i = 0; i < colsCount; i++) {
+                    const col = document.createElement('div');
+                    col.className = 'masonry-col';
+                    container.appendChild(col);
+                    cols.push(col);
+                }
+
+                // 等待图片加载，获取真实高度
+                await Promise.all(items.map(item => {
+                    const img = item.querySelector('img');
+                    return new Promise(resolve => {
+                        if (!img || img.complete) return resolve();
+                        img.addEventListener('load', resolve, { once: true });
+                        img.addEventListener('error', resolve, { once: true });
+                    });
+                }));
+
+                // 顺序将图片放到当前最矮的列中
+                items.forEach(item => {
+                    item.classList.add('masonry-item');
+                    let target = cols[0];
+                    for (const col of cols) {
+                        if (col.offsetHeight < target.offsetHeight) target = col;
+                    }
+                    target.appendChild(item);
+                });
+            }
+
+            function reflowAll() {
+                sections.forEach(section => {
+                    const container = section.querySelector('.masonry-balanced');
+                    reflow(container);
+                });
+            }
+
+            reflowAll();
+            let timer;
+            window.addEventListener('resize', () => {
+                clearTimeout(timer);
+                timer = setTimeout(reflowAll, 150);
+            });
+        });
+    </script>
+
+</body>
+</html>
