@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XIONG — 数码与胶片</title>
+<meta name="description" content="摄影作品展示 — 数码与胶片两个世界的交汇">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --washi: #ebe7df;
+  --ink: #1a1a1c;
+  --graphite: #696865;
+  --safelight: #c4421a;
+  --safelight-glow: #e8552a;
+  --sensor: #3171c4;
+  --sensor-glow: #4b8de0;
+  --emulsion: #d3cfc7;
+  --matte-white: #ffffff;
+  --film-border: #e8d5c4;
+  --film-bg: #f2ede5;
+
+  --font-display: 'Cormorant Garamond', 'Georgia', 'Noto Serif SC', 'SimSun', 'STSong', serif;
+  --font-body: 'Inter', system-ui, 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Consolas', 'Noto Sans SC', 'Microsoft YaHei', monospace;
+
+  --gap-section: clamp(4rem, 10vw, 8rem);
+  --gap-inner: clamp(1.5rem, 3vw, 2.5rem);
+  --max-width: 1400px;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--washi);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Focus ── */
+:focus-visible {
+  outline: 2px solid var(--sensor);
+  outline-offset: 3px;
+}
+
+/* ── Header / Nav ── */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 1.25rem clamp(1rem, 4vw, 3rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
+}
+
+.site-header.scrolled {
+  background: rgba(235, 231, 223, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--emulsion);
+}
+
+.site-brand {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.nav-categories {
+  display: flex;
+  gap: 2px;
+  background: var(--emulsion);
+  border-radius: 2rem;
+  padding: 3px;
+}
+
+.nav-cat {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 0.5rem 1.25rem;
+  border-radius: 2rem;
+  border: none;
+  background: transparent;
+  color: var(--graphite);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.nav-cat::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  transition: background 0.25s ease;
+}
+
+.nav-cat[data-cat="film"]:hover,
+.nav-cat[data-cat="film"].active {
+  background: var(--matte-white);
+  color: var(--safelight);
+}
+
+.nav-cat[data-cat="digital"]:hover,
+.nav-cat[data-cat="digital"].active {
+  background: var(--matte-white);
+  color: var(--sensor);
+}
+
+/* ── Hero ── */
+.hero {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.92) contrast(1.04);
+  animation: hero-reveal 1.2s ease-out;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(235, 231, 223, 0.15) 0%,
+    rgba(235, 231, 223, 0.45) 60%,
+    rgba(235, 231, 223, 0.92) 100%
+  );
+}
+
+.hero-content {
+  position: relative;
+  text-align: center;
+  z-index: 2;
+  padding: 2rem;
+  animation: hero-fade-up 1s 0.3s ease-out both;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 0.25em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-mono);
+  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--graphite);
+  text-transform: uppercase;
+}
+
+.hero-divider {
+  width: clamp(3rem, 6vw, 5rem);
+  height: 1px;
+  background: var(--ink);
+  margin: 1.5rem auto;
+  opacity: 0.3;
+}
+
+/* ── Section Headers ── */
+.section-header {
+  text-align: center;
+  padding: var(--gap-section) 1rem var(--gap-inner);
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.section-label.film { color: var(--safelight); }
+.section-label.digital { color: var(--sensor); }
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.section-desc {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--graphite);
+  max-width: 36rem;
+  margin: 0.75rem auto 0;
+  line-height: 1.7;
+}
+
+/* ── Film Strip Section ── */
+.film-section {
+  padding-bottom: var(--gap-section);
+  background: var(--film-bg);
+  position: relative;
+}
+
+.film-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--safelight), transparent);
+  opacity: 0.3;
+}
+
+.film-strip-wrapper {
+  position: relative;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.film-strip {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 2rem 1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--emulsion) transparent;
+}
+
+.film-strip::-webkit-scrollbar {
+  height: 6px;
+}
+
+.film-strip::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.film-strip::-webkit-scrollbar-thumb {
+  background: var(--emulsion);
+  border-radius: 3px;
+}
+
+.film-frame {
+  flex-shrink: 0;
+  scroll-snap-align: center;
+  width: clamp(280px, 40vw, 500px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.film-frame:hover {
+  transform: translateY(-4px);
+}
+
+.film-frame-image-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.08),
+    0 8px 24px rgba(0,0,0,0.06);
+  /* Film slide mount border */
+  border: 12px solid var(--matte-white);
+  border-bottom-width: 40px;
+  outline: 1px solid var(--emulsion);
+  outline-offset: -1px;
+  background: var(--matte-white);
+}
+
+.film-frame-image-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: -34px;
+  left: 8px;
+  right: 8px;
+  height: 20px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--film-border) 0px,
+    var(--film-border) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  opacity: 0.5;
+}
+
+.film-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3/2;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.film-frame:hover img {
+  transform: scale(1.03);
+}
+
+.film-frame-meta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--safelight);
+  letter-spacing: 0.1em;
+  text-align: center;
+  padding: 0 0.5rem;
+  opacity: 0.8;
+}
+
+/* Film strip nav arrows */
+.strip-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--emulsion);
+  background: var(--matte-white);
+  color: var(--ink);
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  opacity: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.film-strip-wrapper:hover .strip-nav { opacity: 1; }
+
+.strip-nav:hover {
+  border-color: var(--safelight);
+  color: var(--safelight);
+  box-shadow: 0 4px 16px rgba(196, 66, 26, 0.12);
+}
+
+.strip-nav.prev { left: 0; }
+.strip-nav.next { right: 0; }
+
+/* ── Digital Grid Section ── */
+.digital-section {
+  padding-bottom: var(--gap-section);
+}
+
+.digital-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+}
+
+.digital-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: transform 0.3s ease;
+}
+
+.digital-item:hover {
+  transform: translateY(-3px);
+}
+
+.digital-image-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--matte-white);
+  padding: 8px;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 4px 12px rgba(0,0,0,0.04);
+}
+
+.digital-image-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.digital-item:hover .digital-image-wrap img {
+  transform: scale(1.04);
+}
+
+.digital-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.digital-item-label {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+.digital-item-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--sensor);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2em 0.6em;
+  border: 1px solid rgba(49, 113, 196, 0.2);
+  border: 1px solid color-mix(in srgb, var(--sensor) 22%, transparent);
+  border-radius: 1rem;
+}
+
+/* ── Lightbox ── */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(26, 26, 28, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  animation: lb-fade-in 0.25s ease;
+}
+
+.lightbox.open {
+  display: flex;
+}
+
+.lightbox img {
+  max-width: 92vw;
+  max-height: 90vh;
+  max-height: 90dvh;
+  object-fit: contain;
+  border-radius: 2px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.3);
+  cursor: default;
+  animation: lb-img-in 0.35s ease;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  z-index: 201;
+}
+
+.lightbox-close:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.5);
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.3);
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.5);
+}
+
+.lightbox-nav.prev { left: 1.5rem; }
+.lightbox-nav.next { right: 1.5rem; }
+
+.lightbox-counter {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.1em;
+}
+
+/* ── Footer ── */
+.site-footer {
+  text-align: center;
+  padding: var(--gap-section) 1rem;
+  border-top: 1px solid var(--emulsion);
+}
+
+.footer-text {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--graphite);
+  letter-spacing: 0.1em;
+}
+
+.footer-divider {
+  display: inline-block;
+  margin: 0 0.75rem;
+  color: var(--emulsion);
+}
+
+/* ── Animations ── */
+@keyframes hero-reveal {
+  from { transform: scale(1.06); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes hero-fade-up {
+  from { opacity: 0; transform: translateY(2rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lb-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes lb-img-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Scroll Reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(2rem);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .digital-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .film-frame {
+    width: clamp(240px, 50vw, 380px);
+  }
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    padding: 0.9rem 1rem;
+  }
+
+  .nav-cat {
+    font-size: 0.72rem;
+    padding: 0.4rem 1rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2.25rem, 10vw, 4rem);
+  }
+
+  .digital-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .digital-image-wrap {
+    padding: 5px;
+  }
+
+  .film-frame {
+    width: clamp(220px, 65vw, 340px);
+  }
+
+  .film-frame-image-wrap {
+    border-width: 8px;
+    border-bottom-width: 30px;
+  }
+
+  .film-frame-image-wrap::after {
+    bottom: -26px;
+  }
+
+  .strip-nav {
+    opacity: 1;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .lightbox-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .lightbox-nav.prev { left: 0.5rem; }
+  .lightbox-nav.next { right: 0.5rem; }
+
+  .digital-item-label { font-size: 0.72rem; }
+  .digital-item-tag { font-size: 0.6rem; }
+}
+
+@media (max-width: 480px) {
+  .digital-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .film-frame {
+    width: clamp(200px, 78vw, 300px);
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+  .film-strip { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header" id="header">
+  <a href="#" class="site-brand" aria-label="首页">XIONG</a>
+  <nav class="nav-categories" aria-label="作品类别">
+    <button class="nav-cat" data-cat="film" onclick="scrollToSection('film-section')" aria-label="跳转到胶片作品">
+      胶片
+    </button>
+    <button class="nav-cat" data-cat="digital" onclick="scrollToSection('digital-section')" aria-label="跳转到数码作品">
+      数码
+    </button>
+  </nav>
+</header>
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <img
+    class="hero-image"
+    src="gallery/数码/nature-04.jpg"
+    alt="西湖 · 远山塔影"
+    loading="eager"
+    fetchpriority="high"
+  >
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">XIONG</h1>
+    <div class="hero-divider"></div>
+    <p class="hero-subtitle">胶片 · 数码</p>
+  </div>
+</section>
+
+<!-- Film Section -->
+<section class="film-section" id="film-section">
+  <header class="section-header reveal">
+    <p class="section-label film">Film</p>
+    <h2 class="section-title">胶片</h2>
+    <p class="section-desc">
+      每一帧都是时间的显影。在暗房的安全灯下，银盐在相纸上慢慢浮现——这是一个无法加速的过程。
+    </p>
+  </header>
+
+  <div class="film-strip-wrapper">
+    <button class="strip-nav prev" onclick="scrollStrip(-1)" aria-label="上一个">&larr;</button>
+    <div class="film-strip" id="filmStrip">
+      <!-- Injected by JS -->
+    </div>
+    <button class="strip-nav next" onclick="scrollStrip(1)" aria-label="下一个">&rarr;</button>
+  </div>
+</section>
+
+<!-- Digital Section -->
+<section class="digital-section" id="digital-section">
+  <header class="section-header reveal">
+    <p class="section-label digital">Digital</p>
+    <h2 class="section-title">数码</h2>
+    <p class="section-desc">
+      从传感器到屏幕，像素记录下每一个精确的瞬间。这是属于这个时代的观看方式——清晰、即时、无限可能。
+    </p>
+  </header>
+
+  <div class="digital-grid" id="digitalGrid">
+    <!-- Injected by JS -->
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox()" aria-label="关闭">&times;</button>
+  <button class="lightbox-nav prev" onclick="event.stopPropagation(); lightboxNav(-1)" aria-label="上一张">&larr;</button>
+  <img src="" alt="" id="lightboxImg">
+  <button class="lightbox-nav next" onclick="event.stopPropagation(); lightboxNav(1)" aria-label="下一张">&rarr;</button>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer reveal">
+  <p class="footer-text">
+    XIONG PHOTOGRAPHY
+    <span class="footer-divider">/</span>
+    胶片 <span style="color: var(--safelight);">&#9679;</span>
+    <span class="footer-divider">&</span>
+    数码 <span style="color: var(--sensor);">&#9679;</span>
+  </p>
+</footer>
+
+<script>
+/* ── Photo Data ── */
+const filmPhotos = [
+  { file: 'gallery/胶片/film-01.jpg', frame: '0042' },
+  { file: 'gallery/胶片/film-02.jpg', frame: '0002' },
+  { file: 'gallery/胶片/film-03.jpg', frame: '0003' },
+  { file: 'gallery/胶片/film-04.jpg', frame: '0005' },
+  { file: 'gallery/胶片/film-05.jpg', frame: '0012' },
+  { file: 'gallery/胶片/film-06.jpg', frame: '0028' },
+  { file: 'gallery/胶片/film-07.jpg', frame: '0034' },
+  { file: 'gallery/胶片/film-08.jpg', frame: '0037' },
+  { file: 'gallery/胶片/film-09.jpg', frame: '0045' },
+];
+
+const digitalPhotos = [
+  { file: 'gallery/数码/nature-01.jpg', label: 'Nature', tag: '风光' },
+  { file: 'gallery/数码/nature-02.jpg', label: 'Nature', tag: '风光' },
+  { file: 'gallery/数码/nature-03.jpg', label: 'Nature', tag: '风光' },
+  { file: 'gallery/数码/nature-04.jpg', label: 'West Lake', tag: '风光' },
+  { file: 'gallery/数码/nature-05.jpg', label: 'Nature', tag: '风光' },
+  { file: 'gallery/数码/nature-06.jpg', label: 'Nature', tag: '风光' },
+  { file: 'gallery/数码/object-01.jpg', label: 'City Wall', tag: '街拍' },
+  { file: 'gallery/数码/object-02.jpg', label: 'Object', tag: '静物' },
+  { file: 'gallery/数码/object-03.jpg', label: 'Object', tag: '静物' },
+  { file: 'gallery/数码/object-04.jpg', label: 'Object', tag: '静物' },
+  { file: 'gallery/数码/object-05.jpg', label: 'Object', tag: '静物' },
+  { file: 'gallery/数码/object-06.jpg', label: 'Object', tag: '静物' },
+  { file: 'gallery/数码/people-01.jpg', label: 'People', tag: '人像' },
+];
+
+// All photos combined for lightbox navigation
+const allPhotos = [
+  ...filmPhotos.map((p, i) => ({ ...p, group: 'film', groupIndex: i })),
+  ...digitalPhotos.map((p, i) => ({ ...p, group: 'digital', groupIndex: i })),
+];
+
+/* ── Render ── */
+function buildFilmStrip() {
+  const strip = document.getElementById('filmStrip');
+  filmPhotos.forEach((photo, i) => {
+    const frame = document.createElement('div');
+    frame.className = 'film-frame';
+    frame.innerHTML = `
+      <div class="film-frame-image-wrap">
+        <img
+          src="${photo.file}"
+          alt="胶片摄影 · 第${photo.frame}帧"
+          loading="lazy" decoding="async"
+          onclick="event.stopPropagation(); openLightbox('film', ${i})"
+        >
+      </div>
+      <div class="film-frame-meta">NO. ${photo.frame}</div>
+    `;
+    strip.appendChild(frame);
+  });
+}
+
+function buildDigitalGrid() {
+  const grid = document.getElementById('digitalGrid');
+  digitalPhotos.forEach((photo, i) => {
+    const item = document.createElement('div');
+    item.className = 'digital-item';
+    item.innerHTML = `
+      <div class="digital-image-wrap">
+        <img
+          src="${photo.file}"
+          alt="${photo.label}"
+          loading="lazy" decoding="async"
+          onclick="event.stopPropagation(); openLightbox('digital', ${i})"
+        >
+      </div>
+      <div class="digital-item-meta">
+        <span class="digital-item-label">${photo.label}</span>
+        <span class="digital-item-tag">${photo.tag}</span>
+      </div>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+buildFilmStrip();
+buildDigitalGrid();
+
+/* ── Lightbox ── */
+let lightboxGroup = null;
+let lightboxIndex = -1;
+
+function openLightbox(group, index) {
+  lightboxGroup = group;
+  lightboxIndex = index;
+  updateLightboxImage();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e) {
+  if (e && e.target !== document.getElementById('lightbox')) return;
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+  lightboxGroup = null;
+  lightboxIndex = -1;
+}
+
+function lightboxNav(direction) {
+  const group = lightboxGroup;
+  const list = group === 'film' ? filmPhotos : digitalPhotos;
+  lightboxIndex = (lightboxIndex + direction + list.length) % list.length;
+  updateLightboxImage();
+}
+
+function updateLightboxImage() {
+  const list = lightboxGroup === 'film' ? filmPhotos : digitalPhotos;
+  const photo = list[lightboxIndex];
+  const img = document.getElementById('lightboxImg');
+  img.src = photo.file;
+  img.alt = lightboxGroup === 'film'
+    ? `胶片摄影 · 第${photo.frame}帧`
+    : photo.label;
+
+  document.getElementById('lightboxCounter').textContent =
+    `${lightboxIndex + 1} / ${list.length}`;
+}
+
+// Keyboard for lightbox
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'Escape') {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+    lightboxGroup = null;
+    lightboxIndex = -1;
+  }
+  if (e.key === 'ArrowLeft') lightboxNav(-1);
+  if (e.key === 'ArrowRight') lightboxNav(1);
+});
+
+/* ── Film Strip Nav ── */
+function scrollStrip(direction) {
+  const strip = document.getElementById('filmStrip');
+  const frameWidth = strip.querySelector('.film-frame')?.offsetWidth || 300;
+  const gap = 24; // 1.5rem in px
+  strip.scrollBy({ left: direction * (frameWidth + gap), behavior: 'smooth' });
+}
+
+/* ── Category Nav Active State ── */
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateActiveNav() {
+  const filmSection = document.getElementById('film-section');
+  const digitalSection = document.getElementById('digital-section');
+  const filmBtn = document.querySelector('[data-cat="film"]');
+  const digitalBtn = document.querySelector('[data-cat="digital"]');
+  const scrollY = window.scrollY + window.innerHeight / 2;
+
+  if (scrollY >= digitalSection.offsetTop) {
+    filmBtn.classList.remove('active');
+    digitalBtn.classList.add('active');
+  } else if (scrollY >= filmSection.offsetTop) {
+    filmBtn.classList.add('active');
+    digitalBtn.classList.remove('active');
+  } else {
+    filmBtn.classList.remove('active');
+    digitalBtn.classList.remove('active');
+  }
+}
+
+/* ── Header Scroll Effect ── */
+function updateHeader() {
+  const header = document.getElementById('header');
+  if (window.scrollY > 50) {
+    header.classList.add('scrolled');
+  } else {
+    header.classList.remove('scrolled');
+  }
+}
+
+/* ── Scroll Reveal ── */
+function setupReveal() {
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+}
+
+/* ── Combined Scroll Handler ── */
+let scrollTicking = false;
+window.addEventListener('scroll', () => {
+  if (!scrollTicking) {
+    requestAnimationFrame(() => {
+      updateHeader();
+      updateActiveNav();
+      scrollTicking = false;
+    });
+    scrollTicking = true;
+  }
+}, { passive: true });
+
+/* ── Init ── */
+setupReveal();
+updateHeader();
+updateActiveNav();
+</script>
+</body>
+</html>
