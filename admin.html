@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; connect-src 'self' https://api.github.com;">
 <title>上传作品 · XIONG</title>
 <meta name="robots" content="noindex, nofollow">
 <style>
@@ -598,6 +599,18 @@ const API_BASE = 'https://api.github.com';
 
 let currentPreviewPath = null;
 
+/* ── UTF-8 Base64 helpers ── */
+function atobUtf8(b64) {
+  return decodeURIComponent(Array.from(atob(b64), c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+}
+function btoaUtf8(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+    String.fromCharCode('0x' + p1)
+  ));
+}
+
 const TAG_EN_MAP = {
   '风光': 'nature', '街拍': 'street', '静物': 'object', '人像': 'people',
   '建筑': 'architecture', '黑白': 'bw', '夜景': 'night', '旅行': 'travel',
@@ -656,7 +669,7 @@ async function loadPhotoList() {
     });
     if (!resp.ok) throw new Error('获取列表失败');
     const data = await resp.json();
-    const json = JSON.parse(atob(data.content));
+    const json = JSON.parse(atobUtf8(data.content));
     const all = [...(json.film || []), ...(json.digital || [])];
 
     if (all.length === 0) {
@@ -672,14 +685,35 @@ async function loadPhotoList() {
 
       const item = document.createElement('div');
       item.className = 'manage-item';
-      item.innerHTML = `
-        <img class="manage-thumb" src="${entry.file}" alt="" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation(); previewPhoto('${escapeHtml(entry.file)}')" style="cursor:pointer">
-        <div class="manage-info">
-          <div class="manage-name">${fileName}</div>
-          <div class="manage-meta">${metaText}</div>
-        </div>
-        <button class="manage-del" onclick="deletePhoto('${escapeHtml(entry.file)}')" title="删除">&times;</button>
+
+      const thumb = document.createElement('img');
+      thumb.className = 'manage-thumb';
+      thumb.src = entry.file;
+      thumb.alt = '';
+      thumb.loading = 'lazy';
+      thumb.style.cursor = 'pointer';
+      thumb.onerror = () => { thumb.style.display = 'none'; };
+      thumb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        previewPhoto(entry.file);
+      });
+
+      const info = document.createElement('div');
+      info.className = 'manage-info';
+      info.innerHTML = `
+        <div class="manage-name">${fileName}</div>
+        <div class="manage-meta">${metaText}</div>
       `;
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'manage-del';
+      delBtn.title = '删除';
+      delBtn.textContent = '\u00D7';
+      delBtn.addEventListener('click', () => deletePhoto(entry.file));
+
+      item.appendChild(thumb);
+      item.appendChild(info);
+      item.appendChild(delBtn);
       listEl.appendChild(item);
     });
   } catch (e) {
@@ -734,14 +768,12 @@ async function removeFromImagesJson(token, filePath) {
   });
   if (!resp.ok) return;
   const data = await resp.json();
-  const json = JSON.parse(atob(data.content));
+  const json = JSON.parse(atobUtf8(data.content));
 
   json.film = (json.film || []).filter(e => e.file !== filePath);
   json.digital = (json.digital || []).filter(e => e.file !== filePath);
 
-  const content = btoa(unescape(encodeURIComponent(
-    JSON.stringify(json, null, 2)
-  )));
+  const content = btoaUtf8(JSON.stringify(json, null, 2));
 
   await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/gallery/images.json`, {
     method: 'PUT',
@@ -955,7 +987,7 @@ async function updateImagesJson(token, newEntry, category) {
   });
   if (resp.ok) {
     const data = await resp.json();
-    imagesJson = JSON.parse(atob(data.content));
+    imagesJson = JSON.parse(atobUtf8(data.content));
     imagesSha = data.sha;
   } else {
     imagesJson = { film: [], digital: [] };
@@ -970,9 +1002,7 @@ async function updateImagesJson(token, newEntry, category) {
     imagesJson.digital.sort((a, b) => a.file.localeCompare(b.file));
   }
 
-  const content = btoa(unescape(encodeURIComponent(
-    JSON.stringify(imagesJson, null, 2)
-  )));
+  const content = btoaUtf8(JSON.stringify(imagesJson, null, 2));
 
   const jsonBody = {
     message: `Update images.json: add ${newEntry.file.split('/').pop()}`,
@@ -1003,7 +1033,7 @@ async function getNextDigitalNum(token) {
     });
     if (resp.ok) {
       const data = await resp.json();
-      const json = JSON.parse(atob(data.content));
+      const json = JSON.parse(atobUtf8(data.content));
       const digital = json.digital || [];
       if (digital.length > 0) {
         const maxNum = Math.max(...digital.map(d => parseInt(d.num) || 0));
