@@ -315,6 +315,88 @@ body { min-height: 100vh; display: flex; align-items: center; justify-content: c
 /* ── Hidden File Input ── */
 .hidden-input { display: none; }
 
+/* ── Manage List ── */
+.manage-list { margin-top: 1rem; }
+
+.manage-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem;
+  border-bottom: 1px solid var(--emulsion);
+  transition: background 0.15s;
+}
+
+.manage-item:hover { background: #fafaf8; }
+
+.manage-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f0f0ec;
+}
+
+.manage-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.manage-name {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.manage-meta {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--graphite);
+}
+
+.manage-del {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(211,47,47,0.25);
+  background: transparent;
+  color: var(--red);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.manage-del:hover {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
+.manage-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--graphite);
+}
+
+.manage-loading {
+  text-align: center;
+  padding: 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--sensor);
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .panel-body { padding: 1.25rem 1rem; }
@@ -344,6 +426,15 @@ body { min-height: 100vh; display: flex; align-items: center; justify-content: c
           ，勾选 <b>repo</b> 权限，生成后粘贴到此处
         </div>
       </div>
+
+      <!-- 模式切换 -->
+      <div class="tabs" id="modeTabs">
+        <button class="tab active" data-mode="upload" onclick="switchMode('upload')">上传</button>
+        <button class="tab" data-mode="manage" onclick="switchMode('manage')">管理</button>
+      </div>
+
+      <!-- 上传面板 -->
+      <div id="uploadPanel">
 
       <!-- 分类标签 -->
       <div class="tabs" id="categoryTabs">
@@ -399,6 +490,15 @@ body { min-height: 100vh; display: flex; align-items: center; justify-content: c
       <!-- 状态提示 -->
       <div class="status" id="statusMsg"></div>
     </div>
+
+    <!-- 管理面板 -->
+    <div id="managePanel" style="display:none">
+      <div class="form-group">
+        <button class="btn btn-primary" onclick="loadPhotoList()">加载作品列表</button>
+      </div>
+      <div class="status" id="manageStatus"></div>
+      <div class="manage-list" id="photoList"></div>
+    </div>
   </div>
 </div>
 
@@ -440,6 +540,154 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateUploadBtn();
 });
+
+/* ── Mode Switch ── */
+function switchMode(mode) {
+  document.querySelectorAll('#modeTabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`#modeTabs .tab[data-mode="${mode}"]`).classList.add('active');
+  document.getElementById('uploadPanel').style.display = mode === 'upload' ? 'block' : 'none';
+  document.getElementById('managePanel').style.display = mode === 'manage' ? 'block' : 'none';
+  document.getElementById('statusMsg').className = 'status';
+  document.getElementById('manageStatus').className = 'status';
+  if (mode === 'manage') loadPhotoList();
+}
+
+/* ── Manage: Load & Delete ── */
+async function loadPhotoList() {
+  const token = getToken();
+  if (!token) return;
+
+  const listEl = document.getElementById('photoList');
+  listEl.innerHTML = '<div class="manage-loading">加载中…</div>';
+  document.getElementById('manageStatus').className = 'status';
+
+  try {
+    const resp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/gallery/images.json?ref=${BRANCH}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (!resp.ok) throw new Error('获取列表失败');
+    const data = await resp.json();
+    const json = JSON.parse(atob(data.content));
+    const all = [...(json.film || []), ...(json.digital || [])];
+
+    if (all.length === 0) {
+      listEl.innerHTML = '<div class="manage-empty">暂无作品</div>';
+      return;
+    }
+
+    listEl.innerHTML = '';
+    all.forEach(entry => {
+      const fileName = entry.file.split('/').pop();
+      const isFilm = entry.file.includes('胶片');
+      const metaText = isFilm ? `NO. ${entry.frame}` : `#${entry.num} · ${entry.tag}`;
+
+      const item = document.createElement('div');
+      item.className = 'manage-item';
+      item.innerHTML = `
+        <img class="manage-thumb" src="${entry.file}" alt="" loading="lazy" onerror="this.style.display='none'">
+        <div class="manage-info">
+          <div class="manage-name">${fileName}</div>
+          <div class="manage-meta">${metaText}</div>
+        </div>
+        <button class="manage-del" onclick="deletePhoto('${escapeHtml(entry.file)}')" title="删除">&times;</button>
+      `;
+      listEl.appendChild(item);
+    });
+  } catch (e) {
+    listEl.innerHTML = '<div class="manage-empty">加载失败，请检查 Token</div>';
+  }
+}
+
+async function deletePhoto(filePath) {
+  if (!confirm(`确定删除 ${filePath.split('/').pop()}？此操作不可撤销。`)) return;
+
+  const token = getToken();
+  if (!token) return;
+
+  showManageStatus('删除中…', 'loading');
+
+  try {
+    // 1. 获取文件 SHA
+    const getResp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/${filePath}?ref=${BRANCH}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (!getResp.ok) throw new Error('获取文件信息失败');
+    const fileData = await getResp.json();
+
+    // 2. 删除文件
+    const delResp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/${filePath}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: `Delete: ${filePath.split('/').pop()}`,
+        sha: fileData.sha,
+        branch: BRANCH,
+      }),
+    });
+    if (!delResp.ok) throw new Error('删除文件失败');
+
+    // 3. 从 images.json 移除
+    await removeFromImagesJson(token, filePath);
+
+    showManageStatus('删除成功', 'success');
+    loadPhotoList();
+  } catch (e) {
+    showManageStatus(e.message, 'error');
+  }
+}
+
+async function removeFromImagesJson(token, filePath) {
+  const resp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/gallery/images.json?ref=${BRANCH}`, {
+    headers: { 'Authorization': `token ${token}` }
+  });
+  if (!resp.ok) return;
+  const data = await resp.json();
+  const json = JSON.parse(atob(data.content));
+
+  json.film = (json.film || []).filter(e => e.file !== filePath);
+  json.digital = (json.digital || []).filter(e => e.file !== filePath);
+
+  const content = btoa(unescape(encodeURIComponent(
+    JSON.stringify(json, null, 2)
+  )));
+
+  await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/gallery/images.json`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: `Update images.json: remove ${filePath.split('/').pop()}`,
+      content: content,
+      sha: data.sha,
+      branch: BRANCH,
+    }),
+  });
+}
+
+function showManageStatus(msg, type) {
+  const el = document.getElementById('manageStatus');
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getToken() {
+  const token = document.getElementById('tokenInput').value.trim();
+  if (!token) {
+    showManageStatus('请先填写 GitHub Token', 'error');
+    return null;
+  }
+  localStorage.setItem('xiong_github_token', token);
+  return token;
+}
 
 /* ── Category Switch ── */
 function switchTab(cat) {
