@@ -4,11 +4,14 @@ on:
   push:
     paths:
       - 'gallery/**'
+      - '.github/workflows/scan-images.yml'
   workflow_dispatch:
 
 jobs:
   scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
