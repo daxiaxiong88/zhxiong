@@ -333,18 +333,6 @@ body { min-height: 100vh; display: flex; align-items: center; justify-content: c
 
   <div class="panel-body">
 
-    <!-- 登录 -->
-    <div id="loginScreen">
-      <div class="form-group">
-        <label class="form-label" for="pwdInput">管理密码</label>
-        <input type="password" id="pwdInput" class="form-input" placeholder="输入密码…" autocomplete="off">
-      </div>
-      <button class="btn btn-primary" id="loginBtn">进入上传面板</button>
-    </div>
-
-    <!-- 上传界面（初始隐藏） -->
-    <div id="uploadScreen" style="display:none">
-
       <!-- Token -->
       <div class="form-group">
         <label class="form-label" for="tokenInput">GitHub Token</label>
@@ -410,11 +398,6 @@ body { min-height: 100vh; display: flex; align-items: center; justify-content: c
 
       <!-- 状态提示 -->
       <div class="status" id="statusMsg"></div>
-
-      <!-- 退出 -->
-      <div style="text-align:center; margin-top:1rem;">
-        <a href="#" onclick="logout()" style="font-family:var(--font-mono); font-size:0.7rem; color:var(--graphite); text-decoration:none; letter-spacing:0.04em;">退出登录</a>
-      </div>
     </div>
   </div>
 </div>
@@ -426,9 +409,6 @@ const REPO = 'zhxiong';
 const BRANCH = 'main';
 const API_BASE = 'https://api.github.com';
 
-// 密码的 SHA-256 哈希（默认密码: xiong2024，首次使用后可自行修改）
-const PASSWORD_HASH = '66c4ec072b999c733fc6f3c4b6835472e4e7098aa6526cd7c53d073ba4df91c1';
-
 const TAG_EN_MAP = {
   '风光': 'nature', '街拍': 'street', '静物': 'object', '人像': 'people',
   '建筑': 'architecture', '黑白': 'bw', '夜景': 'night', '旅行': 'travel',
@@ -438,26 +418,14 @@ const TAG_EN_MAP = {
 let currentCat = 'film';
 let selectedTag = '风光';
 let selectedFile = null;
-let isLoggedIn = false;
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
-  // 检查是否已登录
-  if (sessionStorage.getItem('xiong_admin_logged_in') === 'true') {
-    showUploadScreen();
-  }
-
   // 恢复 token
   const savedToken = localStorage.getItem('xiong_github_token');
   if (savedToken) {
     document.getElementById('tokenInput').value = savedToken;
   }
-
-  // 回车登录
-  document.getElementById('pwdInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') doLogin();
-  });
-  document.getElementById('loginBtn').addEventListener('click', doLogin);
 
   // 拖拽上传
   const zone = document.getElementById('dropZone');
@@ -472,34 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateUploadBtn();
 });
-
-/* ── Login ── */
-async function doLogin() {
-  const pwd = document.getElementById('pwdInput').value;
-  if (!pwd) return;
-
-  const hash = await sha256(pwd);
-  if (hash === PASSWORD_HASH) {
-    sessionStorage.setItem('xiong_admin_logged_in', 'true');
-    showUploadScreen();
-  } else {
-    shake(document.getElementById('loginBtn'));
-  }
-}
-
-function showUploadScreen() {
-  isLoggedIn = true;
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('uploadScreen').style.display = 'block';
-}
-
-function logout() {
-  sessionStorage.removeItem('xiong_admin_logged_in');
-  isLoggedIn = false;
-  document.getElementById('loginScreen').style.display = 'block';
-  document.getElementById('uploadScreen').style.display = 'none';
-  document.getElementById('pwdInput').value = '';
-}
 
 /* ── Category Switch ── */
 function switchTab(cat) {
@@ -557,9 +497,9 @@ function updateUploadBtn() {
 
   if (currentCat === 'film') {
     const frame = document.getElementById('frameInput').value.trim();
-    btn.disabled = !hasFile || !frame || !isLoggedIn;
+    btn.disabled = !hasFile || !frame;
   } else {
-    btn.disabled = !hasFile || !selectedTag || !isLoggedIn;
+    btn.disabled = !hasFile || !selectedTag;
   }
 }
 
@@ -721,13 +661,6 @@ function readFileAsBase64(file) {
   });
 }
 
-async function sha256(message) {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 function showStatus(msg, type) {
   const el = document.getElementById('statusMsg');
   el.textContent = msg;
@@ -747,29 +680,11 @@ function resetForm() {
   updateUploadBtn();
 }
 
-function shake(el) {
-  el.style.animation = 'none';
-  el.offsetHeight; // reflow
-  el.style.animation = 'shake 0.4s ease';
-}
-
 /* ── Init button style ── */
 (function() {
   const btn = document.getElementById('uploadBtn');
   btn.className = 'btn btn-film';
 })();
-
-/* ── Shake animation ── */
-const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  50% { transform: translateX(6px); }
-  75% { transform: translateX(-4px); }
-}
-`;
-document.head.appendChild(shakeStyle);
 </script>
 </body>
 </html>
