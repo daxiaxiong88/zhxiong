@@ -1,0 +1,28 @@
+{
+  "film": [
+    { "file": "gallery/胶片/film-01.jpg", "frame": "0042" },
+    { "file": "gallery/胶片/film-02.jpg", "frame": "0002" },
+    { "file": "gallery/胶片/film-03.jpg", "frame": "0003" },
+    { "file": "gallery/胶片/film-04.jpg", "frame": "0005" },
+    { "file": "gallery/胶片/film-05.jpg", "frame": "0012" },
+    { "file": "gallery/胶片/film-06.jpg", "frame": "0028" },
+    { "file": "gallery/胶片/film-07.jpg", "frame": "0034" },
+    { "file": "gallery/胶片/film-08.jpg", "frame": "0037" },
+    { "file": "gallery/胶片/film-09.jpg", "frame": "0045" }
+  ],
+  "digital": [
+    { "file": "gallery/数码/nature-01.jpg", "num": "01", "tag": "风光" },
+    { "file": "gallery/数码/nature-02.jpg", "num": "02", "tag": "风光" },
+    { "file": "gallery/数码/nature-03.jpg", "num": "03", "tag": "风光" },
+    { "file": "gallery/数码/nature-04.jpg", "num": "04", "tag": "风光" },
+    { "file": "gallery/数码/nature-05.jpg", "num": "05", "tag": "风光" },
+    { "file": "gallery/数码/nature-06.jpg", "num": "06", "tag": "风光" },
+    { "file": "gallery/数码/object-01.jpg", "num": "07", "tag": "街拍" },
+    { "file": "gallery/数码/object-02.jpg", "num": "08", "tag": "静物" },
+    { "file": "gallery/数码/object-03.jpg", "num": "09", "tag": "静物" },
+    { "file": "gallery/数码/object-04.jpg", "num": "10", "tag": "静物" },
+    { "file": "gallery/数码/object-05.jpg", "num": "11", "tag": "静物" },
+    { "file": "gallery/数码/object-06.jpg", "num": "12", "tag": "静物" },
+    { "file": "gallery/数码/people-01.jpg", "num": "13", "tag": "人像" }
+  ]
+}

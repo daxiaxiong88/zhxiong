@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>上传作品 · XIONG</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --washi: #ebe7df;
+  --ink: #1a1a1c;
+  --graphite: #696865;
+  --safelight: #c4421a;
+  --sensor: #3171c4;
+  --emulsion: #d3cfc7;
+  --matte-white: #fff;
+  --red: #d32f2f;
+  --green: #2e7d32;
+  --font-display: 'Cormorant Garamond', 'Georgia', serif;
+  --font-body: 'Inter', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+}
+
+html {
+  background: var(--washi);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+
+/* ── Container ── */
+.panel {
+  width: 100%;
+  max-width: 480px;
+  background: var(--matte-white);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 1.5rem 1.5rem 0;
+  text-align: center;
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.panel-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--graphite);
+  letter-spacing: 0.1em;
+  margin-top: 0.25rem;
+}
+
+.panel-body {
+  padding: 1.5rem;
+}
+
+/* ── Form Elements ── */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--graphite);
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--emulsion);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  background: #fafaf8;
+  color: var(--ink);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.form-input:focus {
+  border-color: var(--sensor);
+  box-shadow: 0 0 0 3px rgba(49,113,196,0.1);
+}
+
+.form-input::placeholder { color: #bbb; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--emulsion);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 1.25rem;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--graphite);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.tab.active {
+  background: var(--matte-white);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.tab[data-cat="film"].active { color: var(--safelight); }
+.tab[data-cat="digital"].active { color: var(--sensor); }
+
+/* ── File Upload Zone ── */
+.upload-zone {
+  border: 2px dashed var(--emulsion);
+  border-radius: 10px;
+  padding: 2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fafaf8;
+  position: relative;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--sensor);
+  background: rgba(49,113,196,0.03);
+}
+
+.upload-zone.has-file {
+  border-style: solid;
+  border-color: var(--green);
+  background: rgba(46,125,50,0.03);
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  opacity: 0.5;
+}
+
+.upload-text {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--graphite);
+  letter-spacing: 0.04em;
+}
+
+.upload-hint {
+  font-size: 0.68rem;
+  color: #aaa;
+  margin-top: 0.25rem;
+}
+
+/* ── Preview ── */
+.preview-wrap {
+  margin-top: 0.75rem;
+}
+
+.preview-img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f0f0ec;
+}
+
+.preview-info {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--graphite);
+  margin-top: 0.35rem;
+  text-align: center;
+}
+
+/* ── Tags (for digital) ── */
+.tag-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-btn {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--emulsion);
+  border-radius: 20px;
+  background: #fafaf8;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--graphite);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+}
+
+.tag-btn:hover {
+  border-color: var(--sensor);
+  color: var(--sensor);
+}
+
+.tag-btn.selected {
+  background: var(--sensor);
+  color: #fff;
+  border-color: var(--sensor);
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  width: 100%;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: #fff;
+}
+
+.btn-primary:hover { background: #333; }
+.btn-primary:disabled {
+  background: #ccc;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.btn-film {
+  background: var(--safelight);
+  color: #fff;
+}
+
+.btn-film:hover { background: #b33a16; }
+.btn-film:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-digital {
+  background: var(--sensor);
+  color: #fff;
+}
+
+.btn-digital:hover { background: #2560a8; }
+.btn-digital:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Status ── */
+.status {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  display: none;
+  text-align: center;
+}
+
+.status.show { display: block; }
+.status.loading { background: rgba(49,113,196,0.08); color: var(--sensor); }
+.status.success { background: rgba(46,125,50,0.08); color: var(--green); }
+.status.error { background: rgba(211,47,47,0.08); color: var(--red); }
+
+/* ── Token Info ── */
+.token-hint {
+  font-size: 0.68rem;
+  color: #aaa;
+  margin-top: 0.3rem;
+  line-height: 1.5;
+}
+
+.token-hint a {
+  color: var(--sensor);
+  text-decoration: underline;
+}
+
+/* ── Hidden File Input ── */
+.hidden-input { display: none; }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .panel-body { padding: 1.25rem 1rem; }
+  .panel-header { padding: 1.25rem 1rem 0; }
+  .panel-title { font-size: 1.3rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">XIONG</div>
+    <div class="panel-subtitle">作品上传</div>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- 登录 -->
+    <div id="loginScreen">
+      <div class="form-group">
+        <label class="form-label" for="pwdInput">管理密码</label>
+        <input type="password" id="pwdInput" class="form-input" placeholder="输入密码…" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="loginBtn">进入上传面板</button>
+    </div>
+
+    <!-- 上传界面（初始隐藏） -->
+    <div id="uploadScreen" style="display:none">
+
+      <!-- Token -->
+      <div class="form-group">
+        <label class="form-label" for="tokenInput">GitHub Token</label>
+        <input type="password" id="tokenInput" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
+        <div class="token-hint">
+          <a href="https://github.com/settings/tokens/new?scopes=repo&description=zhxiong-upload" target="_blank" rel="noopener">
+            点击创建 Token
+          </a>
+          ，勾选 <b>repo</b> 权限，生成后粘贴到此处
+        </div>
+      </div>
+
+      <!-- 分类标签 -->
+      <div class="tabs" id="categoryTabs">
+        <button class="tab active" data-cat="film" onclick="switchTab('film')">胶片</button>
+        <button class="tab" data-cat="digital" onclick="switchTab('digital')">数码</button>
+      </div>
+
+      <!-- 胶片表单 -->
+      <div id="formFilm">
+        <div class="form-group">
+          <label class="form-label" for="frameInput">胶卷编号</label>
+          <input type="text" id="frameInput" class="form-input" placeholder="例如：0050" maxlength="6">
+        </div>
+      </div>
+
+      <!-- 数码表单 -->
+      <div id="formDigital" style="display:none">
+        <div class="form-group">
+          <label class="form-label">标签</label>
+          <div class="tag-options" id="tagOptions">
+            <button class="tag-btn selected" data-tag="风光" onclick="selectTag(this)">风光</button>
+            <button class="tag-btn" data-tag="街拍" onclick="selectTag(this)">街拍</button>
+            <button class="tag-btn" data-tag="静物" onclick="selectTag(this)">静物</button>
+            <button class="tag-btn" data-tag="人像" onclick="selectTag(this)">人像</button>
+            <button class="tag-btn" data-tag="建筑" onclick="selectTag(this)">建筑</button>
+            <button class="tag-btn" data-tag="黑白" onclick="selectTag(this)">黑白</button>
+            <button class="tag-btn" data-tag="夜景" onclick="selectTag(this)">夜景</button>
+            <button class="tag-btn" data-tag="旅行" onclick="selectTag(this)">旅行</button>
+            <button class="tag-btn" data-tag="动物" onclick="selectTag(this)">动物</button>
+            <button class="tag-btn" data-tag="植物" onclick="selectTag(this)">植物</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文件上传区域 -->
+      <div class="form-group">
+        <label class="form-label">选择图片</label>
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <span class="upload-icon">&#128247;</span>
+          <div class="upload-text" id="uploadText">点击或拖拽图片到此处</div>
+          <div class="upload-hint">支持 JPG / PNG / WebP，建议 2400px 宽</div>
+        </div>
+        <input type="file" id="fileInput" class="hidden-input" accept="image/jpeg,image/png,image/webp" onchange="handleFile(this.files[0])">
+        <div class="preview-wrap" id="previewWrap" style="display:none">
+          <img class="preview-img" id="previewImg" src="" alt="预览">
+          <div class="preview-info" id="previewInfo"></div>
+        </div>
+      </div>
+
+      <!-- 上传按钮 -->
+      <button class="btn" id="uploadBtn" onclick="doUpload()" disabled>上传作品</button>
+
+      <!-- 状态提示 -->
+      <div class="status" id="statusMsg"></div>
+
+      <!-- 退出 -->
+      <div style="text-align:center; margin-top:1rem;">
+        <a href="#" onclick="logout()" style="font-family:var(--font-mono); font-size:0.7rem; color:var(--graphite); text-decoration:none; letter-spacing:0.04em;">退出登录</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Constants ── */
+const OWNER = 'daxiaxiong88';
+const REPO = 'zhxiong';
+const BRANCH = 'main';
+const API_BASE = 'https://api.github.com';
+
+// 密码的 SHA-256 哈希（默认密码: xiong2024，首次使用后可自行修改）
+const PASSWORD_HASH = '66c4ec072b999c733fc6f3c4b6835472e4e7098aa6526cd7c53d073ba4df91c1';
+
+const TAG_EN_MAP = {
+  '风光': 'nature', '街拍': 'street', '静物': 'object', '人像': 'people',
+  '建筑': 'architecture', '黑白': 'bw', '夜景': 'night', '旅行': 'travel',
+  '动物': 'animal', '植物': 'plant',
+};
+
+let currentCat = 'film';
+let selectedTag = '风光';
+let selectedFile = null;
+let isLoggedIn = false;
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => {
+  // 检查是否已登录
+  if (sessionStorage.getItem('xiong_admin_logged_in') === 'true') {
+    showUploadScreen();
+  }
+
+  // 恢复 token
+  const savedToken = localStorage.getItem('xiong_github_token');
+  if (savedToken) {
+    document.getElementById('tokenInput').value = savedToken;
+  }
+
+  // 回车登录
+  document.getElementById('pwdInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+
+  // 拖拽上传
+  const zone = document.getElementById('dropZone');
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  updateUploadBtn();
+});
+
+/* ── Login ── */
+async function doLogin() {
+  const pwd = document.getElementById('pwdInput').value;
+  if (!pwd) return;
+
+  const hash = await sha256(pwd);
+  if (hash === PASSWORD_HASH) {
+    sessionStorage.setItem('xiong_admin_logged_in', 'true');
+    showUploadScreen();
+  } else {
+    shake(document.getElementById('loginBtn'));
+  }
+}
+
+function showUploadScreen() {
+  isLoggedIn = true;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('uploadScreen').style.display = 'block';
+}
+
+function logout() {
+  sessionStorage.removeItem('xiong_admin_logged_in');
+  isLoggedIn = false;
+  document.getElementById('loginScreen').style.display = 'block';
+  document.getElementById('uploadScreen').style.display = 'none';
+  document.getElementById('pwdInput').value = '';
+}
+
+/* ── Category Switch ── */
+function switchTab(cat) {
+  currentCat = cat;
+  document.querySelectorAll('#categoryTabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`#categoryTabs .tab[data-cat="${cat}"]`).classList.add('active');
+  document.getElementById('formFilm').style.display = cat === 'film' ? 'block' : 'none';
+  document.getElementById('formDigital').style.display = cat === 'digital' ? 'block' : 'none';
+
+  const btn = document.getElementById('uploadBtn');
+  btn.className = 'btn';
+  if (cat === 'film') btn.classList.add('btn-film');
+  else btn.classList.add('btn-digital');
+
+  updateUploadBtn();
+}
+
+function selectTag(el) {
+  document.querySelectorAll('#tagOptions .tag-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTag = el.dataset.tag;
+  updateUploadBtn();
+}
+
+/* ── File Handling ── */
+function handleFile(file) {
+  if (!file || !file.type.match(/^image\/(jpeg|png|webp)$/)) {
+    showStatus('请选择 JPG / PNG / WebP 格式的图片', 'error');
+    return;
+  }
+
+  selectedFile = file;
+  const zone = document.getElementById('dropZone');
+  const text = document.getElementById('uploadText');
+  zone.classList.add('has-file');
+  text.textContent = file.name;
+
+  // Preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('previewWrap').style.display = 'block';
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    document.getElementById('previewInfo').textContent = `${file.name}  ·  ${sizeMB} MB`;
+  };
+  reader.readAsDataURL(file);
+
+  updateUploadBtn();
+}
+
+/* ── Upload ── */
+function updateUploadBtn() {
+  const btn = document.getElementById('uploadBtn');
+  const hasFile = !!selectedFile;
+
+  if (currentCat === 'film') {
+    const frame = document.getElementById('frameInput').value.trim();
+    btn.disabled = !hasFile || !frame || !isLoggedIn;
+  } else {
+    btn.disabled = !hasFile || !selectedTag || !isLoggedIn;
+  }
+}
+
+document.getElementById('frameInput')?.addEventListener('input', updateUploadBtn);
+
+async function doUpload() {
+  const token = document.getElementById('tokenInput').value.trim();
+  if (!token) { showStatus('请先填写 GitHub Token', 'error'); return; }
+  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+    showStatus('Token 格式不正确，应以 ghp_ 或 github_pat_ 开头', 'error'); return;
+  }
+
+  // 保存 token
+  localStorage.setItem('xiong_github_token', token);
+
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true;
+  btn.textContent = '上传中…';
+  showStatus('正在上传…', 'loading');
+
+  try {
+    let fileName, folder;
+    if (currentCat === 'film') {
+      const frame = document.getElementById('frameInput').value.trim();
+      if (!/^\d+$/.test(frame)) throw new Error('胶卷编号必须为纯数字');
+      const ext = selectedFile.name.split('.').pop().toLowerCase();
+      fileName = `film-${frame}.${ext}`;
+      folder = 'gallery/胶片';
+    } else {
+      const tagEn = TAG_EN_MAP[selectedTag] || 'other';
+      const nextNum = await getNextDigitalNum(token);
+      const ext = selectedFile.name.split('.').pop().toLowerCase();
+      const paddedNum = String(nextNum).padStart(2, '0');
+      fileName = `${tagEn}-${paddedNum}.${ext}`;
+      folder = 'gallery/数码';
+    }
+
+    const imagePath = `${folder}/${fileName}`;
+
+    // 读取图片为 base64
+    const imageBase64 = await readFileAsBase64(selectedFile);
+
+    // 上传图片（GitHub Action 会自动更新 images.json）
+    showStatus('正在上传…', 'loading');
+    const imgResp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/${imagePath}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: `Upload: ${fileName}`,
+        content: imageBase64,
+        branch: BRANCH,
+      }),
+    });
+
+    if (!imgResp.ok) {
+      const err = await imgResp.json().catch(() => ({}));
+      throw new Error(err.message || `上传失败 (HTTP ${imgResp.status})`);
+    }
+
+    showStatus(`上传成功！${fileName} 已提交，约30秒后页面自动更新`, 'success');
+
+    // 重置表单
+    resetForm();
+
+  } catch (e) {
+    showStatus(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '上传作品';
+    updateUploadBtn();
+  }
+}
+
+async function getNextDigitalNum(token) {
+  try {
+    const resp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/gallery/images.json?ref=${BRANCH}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      const json = JSON.parse(atob(data.content));
+      const digital = json.digital || [];
+      if (digital.length > 0) {
+        const maxNum = Math.max(...digital.map(d => parseInt(d.num) || 0));
+        return maxNum + 1;
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return 1;
+}
+
+/* ── Helpers ── */
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // 去掉 data:image/...;base64, 前缀
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+}
+
+function resetForm() {
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('dropZone').classList.remove('has-file');
+  document.getElementById('uploadText').textContent = '点击或拖拽图片到此处';
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('previewImg').src = '';
+  if (currentCat === 'film') {
+    document.getElementById('frameInput').value = '';
+  }
+  updateUploadBtn();
+}
+
+function shake(el) {
+  el.style.animation = 'none';
+  el.offsetHeight; // reflow
+  el.style.animation = 'shake 0.4s ease';
+}
+
+/* ── Init button style ── */
+(function() {
+  const btn = document.getElementById('uploadBtn');
+  btn.className = 'btn btn-film';
+})();
+
+/* ── Shake animation ── */
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+}
+`;
+document.head.appendChild(shakeStyle);
+</script>
+</body>
+</html>
