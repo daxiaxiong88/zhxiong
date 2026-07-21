@@ -397,6 +397,83 @@ body { min-height: 100vh; display: flex; align-items: center; justify-content: c
   color: var(--sensor);
 }
 
+/* ── Preview Overlay ── */
+.preview-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(26, 26, 28, 0.94);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.preview-overlay.open {
+  display: flex;
+}
+
+.preview-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.preview-full {
+  max-width: 94vw;
+  max-height: 78vh;
+  max-height: 78dvh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.3);
+}
+
+.preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.preview-filename {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.04em;
+}
+
+.preview-del-btn {
+  padding: 0.45rem 1rem;
+  border: 1px solid rgba(211,47,47,0.4);
+  border-radius: 8px;
+  background: transparent;
+  color: #ef5350;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preview-del-btn:hover {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .panel-body { padding: 1.25rem 1rem; }
@@ -502,12 +579,24 @@ body { min-height: 100vh; display: flex; align-items: center; justify-content: c
   </div>
 </div>
 
+<!-- 预览弹窗 -->
+<div class="preview-overlay" id="previewOverlay" onclick="closePreview()">
+  <span class="preview-close" onclick="closePreview()">&times;</span>
+  <img class="preview-full" id="previewFull" src="" alt="" onclick="event.stopPropagation()">
+  <div class="preview-actions" onclick="event.stopPropagation()">
+    <span class="preview-filename" id="previewFilename"></span>
+    <button class="preview-del-btn" id="previewDelBtn" onclick="deleteFromPreview()">删除此作品</button>
+  </div>
+</div>
+
 <script>
 /* ── Constants ── */
 const OWNER = 'daxiaxiong88';
 const REPO = 'zhxiong';
 const BRANCH = 'main';
 const API_BASE = 'https://api.github.com';
+
+let currentPreviewPath = null;
 
 const TAG_EN_MAP = {
   '风光': 'nature', '街拍': 'street', '静物': 'object', '人像': 'people',
@@ -584,7 +673,7 @@ async function loadPhotoList() {
       const item = document.createElement('div');
       item.className = 'manage-item';
       item.innerHTML = `
-        <img class="manage-thumb" src="${entry.file}" alt="" loading="lazy" onerror="this.style.display='none'">
+        <img class="manage-thumb" src="${entry.file}" alt="" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation(); previewPhoto('${escapeHtml(entry.file)}')" style="cursor:pointer">
         <div class="manage-info">
           <div class="manage-name">${fileName}</div>
           <div class="manage-meta">${metaText}</div>
@@ -678,6 +767,36 @@ function showManageStatus(msg, type) {
 function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+function previewPhoto(filePath) {
+  currentPreviewPath = filePath;
+  document.getElementById('previewFull').src = filePath;
+  document.getElementById('previewFilename').textContent = filePath.split('/').pop();
+  document.getElementById('previewOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePreview() {
+  document.getElementById('previewOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  currentPreviewPath = null;
+}
+
+async function deleteFromPreview() {
+  if (!currentPreviewPath) return;
+  const filePath = currentPreviewPath;
+  closePreview();
+  // 短暂延迟让弹窗关闭动画完成
+  await new Promise(r => setTimeout(r, 200));
+  await deletePhoto(filePath);
+}
+
+// ESC 关闭预览
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('previewOverlay').classList.contains('open')) {
+    closePreview();
+  }
+});
 
 function getToken() {
   const token = document.getElementById('tokenInput').value.trim();
