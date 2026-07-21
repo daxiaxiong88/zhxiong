@@ -581,13 +581,14 @@ async function doUpload() {
   showStatus('正在上传…', 'loading');
 
   try {
-    let fileName, folder;
+    let fileName, folder, metaEntry;
     if (currentCat === 'film') {
       const frame = document.getElementById('frameInput').value.trim();
       if (!/^\d+$/.test(frame)) throw new Error('胶卷编号必须为纯数字');
       const ext = selectedFile.name.split('.').pop().toLowerCase();
       fileName = `film-${frame}.${ext}`;
       folder = 'gallery/胶片';
+      metaEntry = { file: `${folder}/${fileName}`, frame: frame };
     } else {
       const tagEn = TAG_EN_MAP[selectedTag] || 'other';
       const nextNum = await getNextDigitalNum(token);
@@ -595,6 +596,7 @@ async function doUpload() {
       const paddedNum = String(nextNum).padStart(2, '0');
       fileName = `${tagEn}-${paddedNum}.${ext}`;
       folder = 'gallery/数码';
+      metaEntry = { file: `${folder}/${fileName}`, num: paddedNum, tag: selectedTag };
     }
 
     const imagePath = `${folder}/${fileName}`;
@@ -602,8 +604,8 @@ async function doUpload() {
     // 读取图片为 base64
     const imageBase64 = await readFileAsBase64(selectedFile);
 
-    // 上传图片（GitHub Action 会自动更新 images.json）
-    showStatus('正在上传…', 'loading');
+    // 1. 上传图片
+    showStatus('正在上传图片…', 'loading');
     const imgResp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/${imagePath}`, {
       method: 'PUT',
       headers: {
@@ -622,9 +624,11 @@ async function doUpload() {
       throw new Error(err.message || `上传失败 (HTTP ${imgResp.status})`);
     }
 
-    showStatus(`上传成功！${fileName} 已提交，约30秒后页面自动更新`, 'success');
+    // 2. 更新 images.json
+    showStatus('正在更新索引…', 'loading');
+    await updateImagesJson(token, metaEntry, currentCat);
 
-    // 重置表单
+    showStatus(`上传成功！${fileName} 已发布`, 'success');
     resetForm();
 
   } catch (e) {
@@ -633,6 +637,55 @@ async function doUpload() {
     btn.disabled = false;
     btn.textContent = '上传作品';
     updateUploadBtn();
+  }
+}
+
+async function updateImagesJson(token, newEntry, category) {
+  // 获取当前 images.json
+  let imagesJson, imagesSha;
+  const resp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/gallery/images.json?ref=${BRANCH}`, {
+    headers: { 'Authorization': `token ${token}` }
+  });
+  if (resp.ok) {
+    const data = await resp.json();
+    imagesJson = JSON.parse(atob(data.content));
+    imagesSha = data.sha;
+  } else {
+    imagesJson = { film: [], digital: [] };
+  }
+
+  // 添加新条目
+  if (category === 'film') {
+    imagesJson.film.push(newEntry);
+    imagesJson.film.sort((a, b) => a.frame.localeCompare(b.frame));
+  } else {
+    imagesJson.digital.push(newEntry);
+    imagesJson.digital.sort((a, b) => a.file.localeCompare(b.file));
+  }
+
+  const content = btoa(unescape(encodeURIComponent(
+    JSON.stringify(imagesJson, null, 2)
+  )));
+
+  const jsonBody = {
+    message: `Update images.json: add ${newEntry.file.split('/').pop()}`,
+    content: content,
+    branch: BRANCH,
+  };
+  if (imagesSha) jsonBody.sha = imagesSha;
+
+  const jsonResp = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/contents/gallery/images.json`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(jsonBody),
+  });
+
+  if (!jsonResp.ok) {
+    const err = await jsonResp.json().catch(() => ({}));
+    throw new Error(`索引更新失败: ${err.message || jsonResp.status}`);
   }
 }
 
