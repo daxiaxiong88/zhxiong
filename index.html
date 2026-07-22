@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="gallery/数码/nature-04.jpg" fetchpriority="high">
 <style>
 /* ── Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -340,7 +341,8 @@ body {
   height: auto;
   aspect-ratio: 3/2;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform 0.5s ease, opacity 0.4s ease;
+  background: linear-gradient(135deg, var(--emulsion), var(--washi));
 }
 
 .film-frame:hover img {
@@ -432,7 +434,8 @@ body {
   height: auto;
   aspect-ratio: 4/3;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform 0.5s ease, opacity 0.4s ease;
+  background: linear-gradient(135deg, var(--emulsion), var(--washi));
 }
 
 .digital-item:hover .digital-image-wrap img {
@@ -462,7 +465,6 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.2em 0.6em;
-  border: 1px solid rgba(49, 113, 196, 0.2);
   border: 1px solid color-mix(in srgb, var(--sensor) 22%, transparent);
   border-radius: 1rem;
 }
@@ -879,12 +881,19 @@ buildDigitalGrid();
 let lightboxGroup = null;
 let lightboxIndex = -1;
 
+let lastFocusedElement = null;
+
 function openLightbox(group, index) {
+  lastFocusedElement = document.activeElement;
   lightboxGroup = group;
   lightboxIndex = index;
   updateLightboxImage();
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // Focus trap: move focus to close button
+  const closeBtn = document.querySelector('.lightbox-close');
+  if (closeBtn) closeBtn.focus();
 }
 
 function closeLightbox(e) {
@@ -893,6 +902,12 @@ function closeLightbox(e) {
   document.body.style.overflow = '';
   lightboxGroup = null;
   lightboxIndex = -1;
+
+  // Return focus to trigger element
+  if (lastFocusedElement) {
+    lastFocusedElement.focus();
+    lastFocusedElement = null;
+  }
 }
 
 function lightboxNav(direction) {
@@ -917,15 +932,32 @@ function updateLightboxImage() {
 
 // Keyboard for lightbox
 document.addEventListener('keydown', (e) => {
-  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  const lightbox = document.getElementById('lightbox');
+  if (!lightbox.classList.contains('open')) return;
+
   if (e.key === 'Escape') {
-    document.getElementById('lightbox').classList.remove('open');
-    document.body.style.overflow = '';
-    lightboxGroup = null;
-    lightboxIndex = -1;
+    closeLightbox();
+    return;
   }
   if (e.key === 'ArrowLeft') lightboxNav(-1);
   if (e.key === 'ArrowRight') lightboxNav(1);
+
+  // Focus trap: Tab cycles within lightbox
+  if (e.key === 'Tab') {
+    const focusables = lightbox.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 });
 
 /* ── Film Strip Nav ── */
@@ -934,6 +966,54 @@ function scrollStrip(direction) {
   const frameWidth = strip.querySelector('.film-frame')?.offsetWidth || 300;
   const gap = 24; // 1.5rem in px
   strip.scrollBy({ left: direction * (frameWidth + gap), behavior: 'smooth' });
+}
+
+/* ── Film Strip Drag & Wheel Scroll ── */
+function setupFilmStripInteractions() {
+  const strip = document.getElementById('filmStrip');
+  if (!strip) return;
+
+  // Mouse drag to scroll
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  strip.addEventListener('mousedown', (e) => {
+    isDown = true;
+    strip.style.cursor = 'grabbing';
+    strip.style.scrollSnapType = 'none';
+    startX = e.pageX - strip.offsetLeft;
+    scrollLeft = strip.scrollLeft;
+  });
+
+  strip.addEventListener('mouseleave', () => {
+    if (!isDown) return;
+    isDown = false;
+    strip.style.cursor = '';
+    strip.style.scrollSnapType = 'x mandatory';
+  });
+
+  strip.addEventListener('mouseup', () => {
+    isDown = false;
+    strip.style.cursor = '';
+    strip.style.scrollSnapType = 'x mandatory';
+  });
+
+  strip.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - strip.offsetLeft;
+    const walk = (x - startX) * 1.2;
+    strip.scrollLeft = scrollLeft - walk;
+  });
+
+  // Wheel to horizontal scroll
+  strip.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      strip.scrollBy({ left: e.deltaY, behavior: 'smooth' });
+    }
+  }, { passive: false });
 }
 
 /* ── Category Nav Active State ── */
@@ -999,6 +1079,7 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 /* ── Init ── */
+setupFilmStripInteractions();
 setupReveal();
 updateHeader();
 updateActiveNav();
