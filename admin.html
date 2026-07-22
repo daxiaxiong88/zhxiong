@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; connect-src 'self' https://api.github.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.github.com;">
 <title>上传作品 · XIONG</title>
 <meta name="robots" content="noindex, nofollow">
 <style>
@@ -532,17 +532,17 @@ body { min-height: 100vh; display: flex; align-items: center; justify-content: c
       <div id="formDigital" style="display:none">
         <div class="form-group">
           <label class="form-label">标签</label>
-          <div class="tag-options" id="tagOptions">
-            <button class="tag-btn selected" data-tag="风光" onclick="selectTag(this)">风光</button>
-            <button class="tag-btn" data-tag="街拍" onclick="selectTag(this)">街拍</button>
-            <button class="tag-btn" data-tag="静物" onclick="selectTag(this)">静物</button>
-            <button class="tag-btn" data-tag="人像" onclick="selectTag(this)">人像</button>
-            <button class="tag-btn" data-tag="建筑" onclick="selectTag(this)">建筑</button>
-            <button class="tag-btn" data-tag="黑白" onclick="selectTag(this)">黑白</button>
-            <button class="tag-btn" data-tag="夜景" onclick="selectTag(this)">夜景</button>
-            <button class="tag-btn" data-tag="旅行" onclick="selectTag(this)">旅行</button>
-            <button class="tag-btn" data-tag="动物" onclick="selectTag(this)">动物</button>
-            <button class="tag-btn" data-tag="植物" onclick="selectTag(this)">植物</button>
+          <div class="tag-options" id="tagOptions" role="group" aria-label="照片标签">
+            <button class="tag-btn selected" data-tag="风光" onclick="selectTag(this)" aria-pressed="true">风光</button>
+            <button class="tag-btn" data-tag="街拍" onclick="selectTag(this)" aria-pressed="false">街拍</button>
+            <button class="tag-btn" data-tag="静物" onclick="selectTag(this)" aria-pressed="false">静物</button>
+            <button class="tag-btn" data-tag="人像" onclick="selectTag(this)" aria-pressed="false">人像</button>
+            <button class="tag-btn" data-tag="建筑" onclick="selectTag(this)" aria-pressed="false">建筑</button>
+            <button class="tag-btn" data-tag="黑白" onclick="selectTag(this)" aria-pressed="false">黑白</button>
+            <button class="tag-btn" data-tag="夜景" onclick="selectTag(this)" aria-pressed="false">夜景</button>
+            <button class="tag-btn" data-tag="旅行" onclick="selectTag(this)" aria-pressed="false">旅行</button>
+            <button class="tag-btn" data-tag="动物" onclick="selectTag(this)" aria-pressed="false">动物</button>
+            <button class="tag-btn" data-tag="植物" onclick="selectTag(this)" aria-pressed="false">植物</button>
           </div>
         </div>
       </div>
@@ -692,7 +692,20 @@ async function loadPhotoList() {
       thumb.alt = '';
       thumb.loading = 'lazy';
       thumb.style.cursor = 'pointer';
-      thumb.onerror = () => { thumb.style.display = 'none'; };
+      thumb.onerror = () => {
+        thumb.style.display = 'none';
+        const placeholder = document.createElement('div');
+        placeholder.className = 'manage-thumb';
+        placeholder.style.display = 'flex';
+        placeholder.style.alignItems = 'center';
+        placeholder.style.justifyContent = 'center';
+        placeholder.style.background = 'var(--emulsion)';
+        placeholder.style.color = 'var(--graphite)';
+        placeholder.style.fontFamily = 'var(--font-mono)';
+        placeholder.style.fontSize = '0.65rem';
+        placeholder.textContent = fileName.split('.').pop().toUpperCase();
+        item.insertBefore(placeholder, thumb);
+      };
       thumb.addEventListener('click', (e) => {
         e.stopPropagation();
         previewPhoto(entry.file);
@@ -790,28 +803,50 @@ async function removeFromImagesJson(token, filePath) {
   });
 }
 
+let statusTimeout = null;
+
 function showManageStatus(msg, type) {
   const el = document.getElementById('manageStatus');
   el.textContent = msg;
   el.className = 'status show ' + type;
+
+  if (statusTimeout) clearTimeout(statusTimeout);
+  if (type === 'success' || type === 'error') {
+    statusTimeout = setTimeout(() => {
+      el.className = 'status';
+    }, 4000);
+  }
 }
 
 function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+let lastFocusedPreviewTrigger = null;
+
 function previewPhoto(filePath) {
+  lastFocusedPreviewTrigger = document.activeElement;
   currentPreviewPath = filePath;
   document.getElementById('previewFull').src = filePath;
   document.getElementById('previewFilename').textContent = filePath.split('/').pop();
   document.getElementById('previewOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // Focus trap: move to close button
+  const closeBtn = document.querySelector('.preview-close');
+  if (closeBtn) closeBtn.focus();
 }
 
 function closePreview() {
   document.getElementById('previewOverlay').classList.remove('open');
   document.body.style.overflow = '';
   currentPreviewPath = null;
+
+  // Return focus to trigger
+  if (lastFocusedPreviewTrigger) {
+    lastFocusedPreviewTrigger.focus();
+    lastFocusedPreviewTrigger = null;
+  }
 }
 
 async function deleteFromPreview() {
@@ -823,10 +858,31 @@ async function deleteFromPreview() {
   await deletePhoto(filePath);
 }
 
-// ESC 关闭预览
+// ESC 关闭预览 & Focus trap
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && document.getElementById('previewOverlay').classList.contains('open')) {
+  const overlay = document.getElementById('previewOverlay');
+  if (!overlay.classList.contains('open')) return;
+
+  if (e.key === 'Escape') {
     closePreview();
+    return;
+  }
+
+  // Focus trap: Tab cycles within preview overlay
+  if (e.key === 'Tab') {
+    const focusables = overlay.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 });
 
@@ -857,8 +913,12 @@ function switchTab(cat) {
 }
 
 function selectTag(el) {
-  document.querySelectorAll('#tagOptions .tag-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#tagOptions .tag-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.setAttribute('aria-pressed', 'false');
+  });
   el.classList.add('selected');
+  el.setAttribute('aria-pressed', 'true');
   selectedTag = el.dataset.tag;
   updateUploadBtn();
 }
@@ -907,8 +967,8 @@ document.getElementById('frameInput')?.addEventListener('input', updateUploadBtn
 async function doUpload() {
   const token = document.getElementById('tokenInput').value.trim();
   if (!token) { showStatus('请先填写 GitHub Token', 'error'); return; }
-  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-    showStatus('Token 格式不正确，应以 ghp_ 或 github_pat_ 开头', 'error'); return;
+  if (token.length < 20) {
+    showStatus('Token 长度过短，请检查是否完整粘贴', 'error'); return;
   }
 
   // 保存 token
@@ -1058,10 +1118,19 @@ function readFileAsBase64(file) {
   });
 }
 
+let uploadStatusTimeout = null;
+
 function showStatus(msg, type) {
   const el = document.getElementById('statusMsg');
   el.textContent = msg;
   el.className = 'status show ' + type;
+
+  if (uploadStatusTimeout) clearTimeout(uploadStatusTimeout);
+  if (type === 'success' || type === 'error') {
+    uploadStatusTimeout = setTimeout(() => {
+      el.className = 'status';
+    }, 4000);
+  }
 }
 
 function resetForm() {
