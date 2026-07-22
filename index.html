@@ -791,12 +791,15 @@ body {
     胶片 <span style="color: var(--safelight);">&#9679;</span>
     <span class="footer-divider">&</span>
     数码 <span style="color: var(--sensor);">&#9679;</span>
+    <span class="footer-divider">/</span>
+    <a href="admin.html" style="color:inherit;text-decoration:none;opacity:0.35;transition:opacity 0.2s;" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='0.35'">+</a>
   </p>
 </footer>
 
 <script>
 /* ── Photo Data ── */
-const filmPhotos = [
+// 本地预览兜底数据（fetch 失败时使用）
+const FALLBACK_FILM = [
   { file: 'gallery/胶片/film-01.jpg', frame: '0042' },
   { file: 'gallery/胶片/film-02.jpg', frame: '0002' },
   { file: 'gallery/胶片/film-03.jpg', frame: '0003' },
@@ -808,7 +811,7 @@ const filmPhotos = [
   { file: 'gallery/胶片/film-09.jpg', frame: '0045' },
 ];
 
-const digitalPhotos = [
+const FALLBACK_DIGITAL = [
   { file: 'gallery/数码/nature-01.jpg', num: '01', tag: '风光' },
   { file: 'gallery/数码/nature-02.jpg', num: '02', tag: '风光' },
   { file: 'gallery/数码/nature-03.jpg', num: '03', tag: '风光' },
@@ -824,15 +827,30 @@ const digitalPhotos = [
   { file: 'gallery/数码/people-01.jpg', num: '13', tag: '人像' },
 ];
 
-// All photos combined for lightbox navigation
-const allPhotos = [
-  ...filmPhotos.map((p, i) => ({ ...p, group: 'film', groupIndex: i })),
-  ...digitalPhotos.map((p, i) => ({ ...p, group: 'digital', groupIndex: i })),
-];
+let filmPhotos = [];
+let digitalPhotos = [];
+
+async function loadPhotos() {
+  try {
+    const resp = await fetch('gallery/images.json');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    filmPhotos = data.film || [];
+    digitalPhotos = data.digital || [];
+  } catch (e) {
+    console.warn('无法加载 images.json，使用本地兜底数据:', e.message);
+    filmPhotos = FALLBACK_FILM;
+    digitalPhotos = FALLBACK_DIGITAL;
+  }
+  buildFilmStrip();
+  buildDigitalGrid();
+  setupReveal();
+}
 
 /* ── Render ── */
 function buildFilmStrip() {
   const strip = document.getElementById('filmStrip');
+  strip.innerHTML = '';
   filmPhotos.forEach((photo, i) => {
     const frame = document.createElement('div');
     frame.className = 'film-frame';
@@ -853,6 +871,7 @@ function buildFilmStrip() {
 
 function buildDigitalGrid() {
   const grid = document.getElementById('digitalGrid');
+  grid.innerHTML = '';
   digitalPhotos.forEach((photo, i) => {
     const item = document.createElement('div');
     item.className = 'digital-item';
@@ -860,7 +879,7 @@ function buildDigitalGrid() {
       <div class="digital-image-wrap">
         <img
           src="${photo.file}"
-          alt="${photo.tag} · 第${photo.num}张"
+          alt="${photo.tag} · #${photo.num}"
           loading="lazy" decoding="async"
           onclick="event.stopPropagation(); openLightbox('digital', ${i})"
         >
@@ -873,9 +892,6 @@ function buildDigitalGrid() {
     grid.appendChild(item);
   });
 }
-
-buildFilmStrip();
-buildDigitalGrid();
 
 /* ── Lightbox ── */
 let lightboxGroup = null;
@@ -1080,7 +1096,7 @@ window.addEventListener('scroll', () => {
 
 /* ── Init ── */
 setupFilmStripInteractions();
-setupReveal();
+loadPhotos();
 updateHeader();
 updateActiveNav();
 </script>

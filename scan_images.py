@@ -1,0 +1,60 @@
+import json
+from pathlib import Path
+
+BASE = Path('gallery')
+FILM_DIR = BASE / '胶片'
+DIGITAL_DIR = BASE / '数码'
+JSON_PATH = BASE / 'images.json'
+
+TAG_MAP = {
+    'nature': '风光', 'street': '街拍', 'object': '静物',
+    'people': '人像', 'architecture': '建筑', 'abstract': '抽象',
+    'night': '夜景', 'bw': '黑白', 'travel': '旅行',
+    'food': '美食', 'animal': '动物', 'plant': '植物',
+}
+
+# 读取已有元数据
+existing = {}
+if JSON_PATH.exists():
+    try:
+        data = json.loads(JSON_PATH.read_text(encoding='utf-8'))
+        for cat in ['film', 'digital']:
+            for item in data.get(cat, []):
+                existing[item['file']] = item
+    except Exception:
+        pass
+
+# 扫描胶片
+film_photos = []
+if FILM_DIR.exists():
+    for f in sorted(FILM_DIR.glob('*')):
+        if f.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp', '.gif'):
+            rel = str(f).replace('\\', '/')
+            if rel in existing:
+                film_photos.append(existing[rel])
+            else:
+                stem = f.stem
+                # film-0042.jpg → frame "0042"
+                parts = stem.split('-', 1)
+                frame = parts[1] if len(parts) > 1 else stem
+                film_photos.append({'file': rel, 'frame': frame})
+
+# 扫描数码
+digital_photos = []
+if DIGITAL_DIR.exists():
+    for f in sorted(DIGITAL_DIR.glob('*')):
+        if f.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp', '.gif'):
+            rel = str(f).replace('\\', '/')
+            if rel in existing:
+                digital_photos.append(existing[rel])
+            else:
+                stem = f.stem
+                parts = stem.split('-', 1)
+                tag_en = parts[0] if len(parts) > 0 else 'unknown'
+                num = parts[1] if len(parts) > 1 else '00'
+                tag_cn = TAG_MAP.get(tag_en.lower(), tag_en)
+                digital_photos.append({'file': rel, 'num': num, 'tag': tag_cn})
+
+result = {'film': film_photos, 'digital': digital_photos}
+JSON_PATH.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
+print(f'Generated images.json: {len(film_photos)} film + {len(digital_photos)} digital photos')
