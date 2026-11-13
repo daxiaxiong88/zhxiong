@@ -1,10 +1,6 @@
 {
   "film": [
     {
-      "file": "gallery/胶片/film-01.jpg",
-      "frame": "0042"
-    },
-    {
       "file": "gallery/胶片/film-02.jpg",
       "frame": "0002"
     },
@@ -33,8 +29,16 @@
       "frame": "0037"
     },
     {
+      "file": "gallery/胶片/film-01.jpg",
+      "frame": "0042"
+    },
+    {
       "file": "gallery/胶片/film-09.jpg",
       "frame": "0045"
+    },
+    {
+      "file": "gallery/胶片/film-0052.jpg",
+      "frame": "0052"
     }
   ],
   "digital": [
