@@ -264,8 +264,12 @@ body {
   padding: 0 1rem;
 }
 
+/* 两行横向胶片：先填满一列的上下两格，再向右展开 */
 .film-strip {
-  display: flex;
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(260px, 30vw, 420px);
   gap: 1.5rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -290,9 +294,7 @@ body {
 }
 
 .film-frame {
-  flex-shrink: 0;
   scroll-snap-align: center;
-  width: clamp(280px, 40vw, 500px);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -619,8 +621,8 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .film-frame {
-    width: clamp(240px, 50vw, 380px);
+  .film-strip {
+    grid-auto-columns: clamp(220px, 36vw, 340px);
   }
 }
 
@@ -647,8 +649,10 @@ body {
     padding: 5px;
   }
 
-  .film-frame {
-    width: clamp(220px, 65vw, 340px);
+  .film-strip {
+    grid-auto-columns: clamp(170px, 44vw, 260px);
+    gap: 1rem;
+    padding: 1.5rem 0.75rem;
   }
 
   .film-frame-image-wrap {
@@ -687,8 +691,8 @@ body {
     margin: 0 auto;
   }
 
-  .film-frame {
-    width: clamp(200px, 78vw, 300px);
+  .film-strip {
+    grid-auto-columns: clamp(150px, 58vw, 220px);
   }
 
   .section-title {
@@ -980,7 +984,8 @@ document.addEventListener('keydown', (e) => {
 function scrollStrip(direction) {
   const strip = document.getElementById('filmStrip');
   const frameWidth = strip.querySelector('.film-frame')?.offsetWidth || 300;
-  const gap = 24; // 1.5rem in px
+  // 两行布局：一次滚动一列（两张照片）
+  const gap = parseFloat(getComputedStyle(strip).columnGap) || 24;
   strip.scrollBy({ left: direction * (frameWidth + gap), behavior: 'smooth' });
 }
 
